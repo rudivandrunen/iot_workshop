@@ -1,0 +1,126 @@
+# Copyright (c) 2017
+# 
+#  This compose will work with docker 1.11+ and docker-compose 1.7+
+# 
+#  To run, call:
+#    $ docker-compose -f <filename> up
+# 
+version: '2.1'
+services: 
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    hostname: grafana
+    environment:
+      - "GF_SECURITY_ADMIN_PASSWORD=secret"
+      - "GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource"
+    volumes:
+      - /Users/rudi/SNOW/data/grafana:/var/lib/grafana
+    expose:
+      - 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - "IoT_nw"
+#
+# Influxdb
+#
+  influxdb:
+    image: rudivd/test:influx-rvd
+    container_name: influxdb
+    hostname: influxdb
+    healthcheck:
+       test: ["CMD", "/healthcheck.sh"]
+       interval: 30s
+       timeout: 10s
+       retries: 30
+    environment:
+      - INFLUXDB_REPORTING_DISABLED=false
+      - INFLUXDB_ADMIN_ENABLED=true
+      - INFLUXDB_GRAPHITE_ENABLED=true
+    volumes:
+      - /Users/rudi/SNOW/data/inflx:/var/lib/influxdb
+      - /Users/rudi/SNOW/config/inflx:/etc/influxdb
+    expose:
+      - 8086
+      - 8083
+      - 2003
+    ports:
+      - "8086:8086"
+      - "8083:8083"
+      - "2003:2003"
+    networks:
+      - "IoT_nw"
+#
+# Telegraf
+#
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    hostname: telegraf
+    volumes:
+      - /Users/rudi/SNOW/config/telegraf:/etc/telegraf
+    expose:
+      - 8125
+      - 8092
+      - 8094
+    ports:
+      - "8094:8094"
+      - "8092:8092"
+      - "8125:8125"
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - "IoT_nw"
+#
+# chronograf
+#
+  chronograf:
+    image: chronograf:latest
+    container_name: chronograf
+    hostname: chronograf
+    volumes:
+      - /Users/rudi/SNOW/data/chronograf:/var/lib/chronograf
+    expose:
+      - 8888
+    ports:
+      - "8888:8888"
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - "IoT_nw"
+#
+# kapacitor
+#
+  kapacitor:
+    image: kapacitor:latest
+    container_name: kapacitor
+    hostname: kapacitor
+    environment:
+      - KAPACITOR_HOSTNAME=kapacitor
+      - KAPACITOR_LOGGING_LEVEL=INFO
+      - KAPACITOR_REPORTING_ENABLED=true
+      - KAPACITOR_INFLUXDB_0_URLS_0=http://influxdb:8086
+    volumes:
+      - /Users/rudi/SNOW/config/kapacitor:/etc/kapacitor
+      - /Users/rudi/SNOW/data/kapacitor:/var/lib/kapacitor
+    expose:
+      - 9092
+    ports:
+      - "9092:9092"
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - "IoT_nw"
+#
+networks:
+  IoT_nw:
+    driver: bridge
+#
+#

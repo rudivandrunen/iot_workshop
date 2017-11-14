@@ -1,0 +1,47 @@
+# This affects access control for clients with no username.
+topic read $SYS/#
+
+# topic read #
+
+# This only affects clients with username "roger".
+# user roger
+# topic foo/bar
+
+user snow01
+topic readwrite 159D/#
+user snow02
+topic readwrite C07C/#
+user snow03
+topic readwrite EF85/#
+user snow04
+topic readwrite 159A/#
+user snow05
+topic readwrite F3C8/#
+user snow06
+topic readwrite 5CA0/#
+user snow07
+topic readwrite F49E/#
+user snow08
+topic readwrite 597E/#
+user snow09
+topic readwrite BACD/#
+user snow10
+topic readwrite F497/#
+user snow11
+topic readwrite C132/#
+user snow12
+topic readwrite EF33/#
+user snow13
+topic readwrite F2DF/#
+user snow14
+topic readwrite 5C9D/#
+user snow15
+topic readwrite F616/#
+
+user rudi
+topic readwrite #
+user rudivd
+topic readwrite #
+
+# This affects all clients.
+pattern write $SYS/broker/connection/%c/state
